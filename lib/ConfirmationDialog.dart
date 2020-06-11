@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:yegayega/api/models/PostOrderRequest.dart';
 import 'package:yegayega/api/models/Product.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'api/providers/products.provider.dart';
 
 class ConfirmationDialog extends StatefulWidget{
   final List<Product> cartProducts; 
   final double totalCart;
+  final ValueChanged<bool> onSendOrderListener;
 
-  const ConfirmationDialog({Key key, this.cartProducts, this.totalCart}) : super(key: key);
+  const ConfirmationDialog({Key key, this.cartProducts, this.totalCart, this.onSendOrderListener}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -15,29 +20,137 @@ class ConfirmationDialog extends StatefulWidget{
 }
     
 class ConfirmationDialogState extends State<ConfirmationDialog>{
+  bool submitting = false;
   Item selectedItem = users[0];
+  TextEditingController nameController = new TextEditingController();
+  TextEditingController phoneController = new TextEditingController();
+  TextEditingController addressController = new TextEditingController();
+  TextEditingController indicationsController = new TextEditingController();
+
+  Future<void> _getDataSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    this.nameController.text = prefs.getString("name");
+    this.phoneController.text = prefs.getString("phone");
+    this.addressController.text = prefs.getString("address");
+    this.indicationsController.text = prefs.getString("indications");
+
+    int zone = prefs.getInt("zone") ?? 1;
+    setState(() {
+      this.selectedItem = users.where((element) => element.id == zone).toList()[0];
+    });
+  }
+
+  showDialogEmptyFields(){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new Text("YegaYega"),
+          content: new Text(
+              "Todos los campos son requeridos"),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Aceptar"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Null> saveOrder() async {
+    PostOrderRequest postOrderRequest = new PostOrderRequest(
+      phoneController.text,
+      nameController.text,
+      addressController.text,
+      selectedItem.id,
+      indicationsController.text);
+
+    ProductProvider().postOrder(postOrderRequest, widget.cartProducts, (
+        [bool response, bool responseData]) async {
+          print('response -- ' + response.toString());
+          widget.onSendOrderListener(response);
+          setState(() {
+            this.submitting = false;      
+          });
+      showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new Text("YegaYega"),
+          content: new Text(
+              "Su pedido fue creado exitosamente. No salgas de casa, nosotros te lo llevamos"),
+          actions: <Widget>[
+            new FlatButton(
+              child: new Text("Aceptar"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    this.nameController.text = "";
+    this.phoneController.text = "";
+    this.addressController.text = "";
+    this.indicationsController.text = "";
+
+    _getDataSaved();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text("CONFIRMAR PEDIDO"),
-      content: Column(
+      content: this.submitting
+      ? const Center(child: const CircularProgressIndicator())
+      : SingleChildScrollView(
+      child: Column(
         children: <Widget>[
           TextField(
+            controller: nameController,
             decoration: InputDecoration(
               icon: Icon(Icons.account_circle),
               labelText: 'Nombre',
             ),
           ),
           TextField(
+            controller: phoneController,
+            keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              icon: Icon(Icons.lock),
+              icon: Icon(Icons.phone),
               labelText: 'Teléfono',
             ),
           ),
           TextField(
+            controller: addressController,
+            maxLines: null,
             decoration: InputDecoration(
               icon: Icon(Icons.pin_drop),
               labelText: 'Dirección',
+            ),
+          ),
+          TextField(
+            controller: indicationsController,
+            maxLines: null,
+            decoration: InputDecoration(
+              icon: Icon(Icons.message),
+              labelText: 'Indicaciones especiales',
             ),
           ),
           DropdownButton<Item>(
@@ -115,7 +228,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
               ]
             ),
         ],
-      ),
+      )),
       actions: <Widget>[
         FlatButton(
           onPressed: (){
@@ -127,7 +240,22 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
           ),
         ),
         FlatButton(
-          onPressed: (){},
+          onPressed: () async {
+            if (this.nameController.text == '' || this.phoneController.text == '' || this.addressController.text == ''){
+              showDialogEmptyFields();
+            } else {
+              setState(() {
+                this.submitting = true;
+              });
+              final prefs = await SharedPreferences.getInstance();
+                  prefs.setString('name', this.nameController.text);
+                  prefs.setString('phone', this.phoneController.text);
+                  prefs.setString('address', this.addressController.text);
+                  prefs.setString('indications', indicationsController.text);
+                  prefs.setInt('zone', this.selectedItem.id);
+                  saveOrder();
+            }
+          },
           child: Text(
             "CONFIRMAR",
             style: TextStyle(color: Colors.blueAccent, fontSize: 18),
@@ -140,7 +268,8 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
 }
 
 class Item {
-  const Item(this.name,this.price, this.showPrice);
+  const Item(this.id, this.name,this.price, this.showPrice);
+  final int id;
   final String name;
   final double price;
   final String showPrice;
@@ -148,11 +277,14 @@ class Item {
 
 
 List<Item> users = <Item>[
-    const Item('Santa María Ixhuatán',5, 'Q5.00'),
-    const Item('Estanzuelas',8, 'Q8.00'),
-    const Item('Santa Anita',8, 'Q8.00'),
-    const Item('Los Hatillos',8, 'Q8.00'),
-    const Item('La Esperanza',10, 'Q10.00'),
-    const Item('La Fila',10, 'Q10.00'),
-    const Item('Llano Grande',12, 'Q12.00'),
+    const Item(1, 'Ixhuatán',5, 'Q5.00'),
+    const Item(2, 'Estanzuelas',8, 'Q8.00'),
+    const Item(3, 'La Fila',10, 'Q10.00'),
+    const Item(4, 'Los Hatillos',8, 'Q8.00'),
+    const Item(5, 'Santa Anita',8, 'Q8.00'),
+    const Item(6, 'La Esperanza',10, 'Q10.00'),
+    const Item(7, 'Llano Grande',12, 'Q12.00'),
+    const Item(8, 'Media Legua',10, 'Q10.00'),
+    const Item(9, 'Cerro Chato',11, 'Q11.00'),
+    const Item(10, 'San Antonio',12, 'Q12.00'),
   ];

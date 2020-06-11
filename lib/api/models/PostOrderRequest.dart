@@ -10,15 +10,16 @@ class PostOrderRequest {
   String horaentrega;
   String indicacionesespeciales;
   String correo;
-  String zonaid;
-  List<Product> productos;
+  int zonaid;
+  //List<Product> productos;
 
   PostOrderRequest(
     this.telefono, 
     this.nombre,
     this.direccion,
     this.zonaid,
-    this.productos);
+    this.indicacionesespeciales
+    );
 
   Map<String, dynamic> toJson() =>
     {
@@ -29,7 +30,7 @@ class PostOrderRequest {
       //'aliasdireccion': aliasdireccion,
       //'fechaentrega': fechaentrega,
       //'horaentrega': horaentrega,
-      //'indicacionesespeciales': indicacionesespeciales,
+      'indicacionesespeciales': indicacionesespeciales,
       //'correo': correo,
       'zonaid': zonaid
     };

@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:yegayega/api/models/Product.dart';
+
 class ProductProvider {
 
   Future<GetProductsResponse> getProducts(
@@ -30,16 +32,47 @@ class ProductProvider {
     }
   }
 
-  Future<GetProductsResponse> postOrder(PostOrderRequest postOrderRequest,
+  Future<bool> postOrder(PostOrderRequest postOrderRequest, List<Product> products,
     callback(bool response)) async {
+
+    List<Map> listProduct = new List();
+
+    products.forEach((element) {
+      Map map = new Map();
+      map = {'productoid': element.id, 'cantidad': element.count.toString()};
+      listProduct.add(map);
+    });
+
+    var now = new DateTime.now();
+    //String formattedDate = DateFormat('yy mm dd').format(now);
+
+    print('products ' + jsonEncode(listProduct));
 
     try {
       final result = await InternetAddress.lookup('google.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        final response = await http.post(
-            ApiMethods().postOrder(),
-            body: postOrderRequest.toJson()
-        );
+
+        var request = new http.MultipartRequest('POST', Uri.parse(ApiMethods().postOrder()));
+        request.headers[HttpHeaders.CONTENT_TYPE] = 'multipart/form-data;charset=utf-8';
+        request.fields['telefono'] = postOrderRequest.telefono;
+        request.fields['nombre'] = postOrderRequest.nombre;
+        request.fields['direccion'] = postOrderRequest.direccion;
+        request.fields['direccionentregaid'] = '0';
+        request.fields['aliasdireccion'] = '';
+        request.fields['fechaentrega'] = '';
+        request.fields['horaentrega'] = '';
+        request.fields['indicacionesespeciales'] = postOrderRequest.indicacionesespeciales;
+        request.fields['correo'] = '';
+        request.fields['zonaid'] = postOrderRequest.zonaid.toString();
+        request.fields['productos'] = jsonEncode(listProduct);
+
+        final response = await request.send();
+
+        print('*-*-*-*-*-*-*-*-*-*-*-*-*');
+        
+        response.stream.transform(utf8.decoder).listen((event) {
+          print(event.toString());
+        });
 
         if (response.statusCode == 200) {
           callback(true);

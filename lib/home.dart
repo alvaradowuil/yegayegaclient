@@ -5,6 +5,7 @@ import 'package:yegayega/api/providers/products.provider.dart';
 import 'package:yegayega/api/models/GetProductsResponse.dart';
 
 import 'ConfirmationDialog.dart';
+import 'api/ApiMethods.dart';
 
 class HomePage extends StatefulWidget {
   static String tag = 'home-page';
@@ -15,8 +16,12 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   final TextStyle greenStyle = TextStyle(color: Color.fromRGBO(0, 145, 86, 1));
+  final TextStyle titleApp = TextStyle(color: Color.fromRGBO(0, 25, 81, 119));
+  String cartButton = "Ver pedido";
+  String productNotFount = "";
 
-  TextEditingController searchController = new TextEditingController();
+  TextEditingController searchController;
+  bool _isSearchEnabled = true;
 
   List<Product> products = new List();
   List<Product> filterProducts = new List();
@@ -26,10 +31,16 @@ class HomePageState extends State<HomePage> {
   bool isEmpty = false;
   int _itemCount = 0;
   double _totalCart = 0;
+  bool isShowCart = false;
+
+  Product productoToShow;
 
   @override
   void initState() {
     super.initState();
+
+    this.searchController = new TextEditingController();
+
     this.getProducts();
     this.searchController.addListener(() {
       setState(() {
@@ -38,6 +49,18 @@ class HomePageState extends State<HomePage> {
             .products
             .where((i) => i.name.toLowerCase().contains(filter.toLowerCase()))
             .toList();
+
+        this.filterProducts.addAll(
+          this.products
+            .where((i) => i.classification.toLowerCase().contains(filter.toLowerCase()))
+            .toList()
+        );
+
+        if (filter != '' && this.filterProducts.length == 0){
+          productNotFount = 'Lo que buscas no existe en nuestro catálogo';
+        } else {
+          productNotFount = '';
+        }
       });
     });
   }
@@ -48,13 +71,31 @@ class HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  _showResult(bool result){
+    if (result) {
+      setState(() {
+        filterProducts = new List();
+        submitting = false;
+        _isSearchEnabled = true;
+        filter = '';
+        isEmpty = false;
+        _itemCount = 0;
+        _totalCart = 0;
+      });
+      this.getProducts();
+    }
+  }
+
   void _buildConfirmationDialog() {
   showDialog<void>(
     context: context,
     builder: (BuildContext context) {
-      return ConfirmationDialog(
+      return  ConfirmationDialog(
                 cartProducts: this.products.where((product) => product.count > 0).toList(),
-                totalCart: this._totalCart
+                totalCart: this._totalCart,
+                onSendOrderListener: (result){
+                  _showResult(result);
+                },
              );
     }
   );
@@ -100,15 +141,27 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  bool isFilterEmpty(){
+    return this.filterProducts.length == 0 && filter == '';
+  }
+
   _showCart(){
+      searchController.text = '';
     setState(() {
+      isShowCart = true;
+      filter = '';
+      _isSearchEnabled = false;
       filterProducts = this.products.where((product) => product.count > 0).toList();
+      cartButton = "Ver todo";
     });
   }
 
   _showAll(){
     setState(() {
+      isShowCart = false;
       this.filterProducts = new List();
+      cartButton = "Ver pedido";
+      _isSearchEnabled = true;
     });
   }
 
@@ -131,6 +184,9 @@ class HomePageState extends State<HomePage> {
       _totalCart = _totalCart - this.products[index].price;
       products[index].count--;
       _itemCount--;
+      if (_itemCount == 0) {
+        filterProducts = new List();
+      }
     });
   }
 
@@ -143,6 +199,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final searchTextField = TextField(
+      enabled: _isSearchEnabled,
       decoration: InputDecoration(
           icon: Icon(Icons.search),
           hintText: "Buscar",
@@ -153,9 +210,17 @@ class HomePageState extends State<HomePage> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(
-            'YegaYega',
-            style: greenStyle,
+          title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                  Image.asset(
+                 'assets/ic_launcher.png',
+                  fit: BoxFit.contain,
+                  height: 52,
+              ),
+              Container(
+                  padding: const EdgeInsets.all(8.0), child: Text('YegaYega',style: titleApp,))
+            ],
           ),
           centerTitle: true,
           backgroundColor: Colors.white,
@@ -203,7 +268,8 @@ class HomePageState extends State<HomePage> {
                                   SizedBox(height: 15.0),
                                 ]))),
                   )
-                : Column(
+                : Stack(children: <Widget>[
+                  Column(
                     children: <Widget>[
                       
                       this._itemCount < 1
@@ -213,7 +279,7 @@ class HomePageState extends State<HomePage> {
                       : Column(
                         children: <Widget>[
 
-                          Text("Q. " + _totalCart.toString() + ".00",
+                          Text("Q. " + _totalCart.toString(),
                           style: TextStyle(height: 2, fontSize: 35),),
                           Text(_itemCount.toString() + " Elementos",
                           style: TextStyle(height: 1, fontSize: 18),),
@@ -228,31 +294,27 @@ class HomePageState extends State<HomePage> {
                             padding: EdgeInsets.fromLTRB(30, 8, 30, 8),
                             splashColor: Colors.blueAccent,
                             onPressed: () {
-                              this.filterProducts.length > 0
+                              isShowCart
                               ? _showAll()
                               : _showCart();
                             },
-                        child: new Text("Ver pedido"),),
-                        new FlatButton(
-                            color: Colors.blue,
-                            textColor: Colors.white,
-                            disabledColor: Colors.grey,
-                            disabledTextColor: Colors.black,
-                            padding: EdgeInsets.fromLTRB(30, 8, 30, 8),
-                            splashColor: Colors.blueAccent,
-                            onPressed: () {
-                              _buildConfirmationDialog();
-                            },
-                        child: new Text("Comprar ahora"),)
-                      
+                            child: new Text(cartButton),),
+                            new FlatButton(
+                                color: Colors.blue,
+                                textColor: Colors.white,
+                                disabledColor: Colors.grey,
+                                disabledTextColor: Colors.black,
+                                padding: EdgeInsets.fromLTRB(30, 8, 30, 8),
+                                splashColor: Colors.blueAccent,
+                                onPressed: () => _buildConfirmationDialog(),
+                                child: new Text("Comprar ahora"),)
+                          
                             ]
                             
                           )
 
                         ]
                       ),
-                      
-                      
                       Padding(
                           padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
                           child: Container(
@@ -274,10 +336,11 @@ class HomePageState extends State<HomePage> {
                                           child: Center(child: searchTextField),
                                         )))),
                           )),
+                          Text(productNotFount),
                       _divider(),
                       Expanded(
                           child: ListView.builder(
-                        itemCount: this.filterProducts.length > 0
+                        itemCount: !isFilterEmpty()
                             ? this.filterProducts.length
                             : this.products.length,
                         itemBuilder: (BuildContext ctxt, int index) {
@@ -285,29 +348,29 @@ class HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               ListTile(
-                                    title: new Text(this.filter != ""
+                                    title: new Text(!isFilterEmpty()
                                               ? this.filterProducts[index].name
                                               : this.products[index].name),
-                                    subtitle: new Text(this.filter != ""
-                                            ? 'Q. ' + this.filterProducts[index].price.toString() + '.00'
-                                            : 'Q. ' + this.products[index].price.toString() + '.00' ),
-                                    leading: ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              minWidth: 44,
-                                              minHeight: 44,
-                                              maxWidth: 64,
-                                              maxHeight: 64,
-                                            ),
-                                            //child: Image.network(
-                                              //ApiMethods().getBaseImage() + this.products[index].image,fit: BoxFit.cover),
-                                          ),
+                                    subtitle: new Text(!isFilterEmpty()
+                                            ? 'Q. ' + this.filterProducts[index].price.toString()
+                                            : 'Q. ' + this.products[index].price.toString()),
+                                    leading: !isFilterEmpty()
+                                            ? new Image.network(ApiMethods().getBaseImage() + this.filterProducts[index].image)
+                                            : new Image.network(ApiMethods().getBaseImage() + this.products[index].image),
                                     trailing: ActionsItem(
-                                      product: this.filter != ""
+                                      product: !isFilterEmpty()
                                               ? this.filterProducts[index]
                                               : this.products[index],
                                       addAction: _addItem,
                                       removeAction: _removeItem,
-                                    )
+                                    ),
+                                    onTap: (){
+                                      setState(() {
+                                        this.productoToShow = !isFilterEmpty()
+                                              ? this.filterProducts[index]
+                                              : this.products[index];  
+                                      });
+                                    },
                                 ),
                               _divider()
                             ],
@@ -315,7 +378,54 @@ class HomePageState extends State<HomePage> {
                         },
                       ))
                     ],
-                  ));
+                  ),
+                  if (this.productoToShow != null) 
+                    Container(
+                            color: Colors.white,
+                            child: ListView(
+                            children: <Widget>[
+                              new Image.network(ApiMethods().getBaseImage() + this.productoToShow.image),
+                              Text(this.productoToShow.name,
+                                style: TextStyle(height: 2, fontSize: 20,), textAlign: TextAlign.center),
+                              Text('Q ' + this.productoToShow.price.toString(),
+                                style: TextStyle(height: 2, fontSize: 20), textAlign: TextAlign.center),
+                              Text(this.productoToShow.name,
+                                style: TextStyle(height: 2, fontSize: 15), textAlign: TextAlign.center),
+                              Center(
+                                child: Wrap(
+                                spacing: 8,
+                                children: <Widget>[
+                                  new FlatButton(
+                                      color: Colors.blue,
+                                      textColor: Colors.white,
+                                      disabledColor: Colors.grey,
+                                      disabledTextColor: Colors.black,
+                                      padding: EdgeInsets.fromLTRB(30, 8, 30, 8),
+                                      splashColor: Colors.blueAccent,
+                                      onPressed: () {
+                                        setState(() {
+                                          this.productoToShow = null;  
+                                        });
+                                      },
+                                      child: new Text("Regresar"))
+                                  ,
+                                  ActionsItem(
+                                          product: this.productoToShow,
+                                          addAction: _addItem,
+                                          removeAction: _removeItem,
+                                        )
+                                  
+                                ]
+                              ),
+                              )
+                            ],
+                          )
+                        
+                  )
+                ],
+              )
+                
+                );
   }
 }
 
