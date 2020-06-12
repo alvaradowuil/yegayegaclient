@@ -1,5 +1,3 @@
-import 'package:yegayega/api/models/Product.dart';
-
 class PostOrderRequest {
   String telefono;
   String nombre;
@@ -18,7 +16,9 @@ class PostOrderRequest {
     this.nombre,
     this.direccion,
     this.zonaid,
-    this.indicacionesespeciales
+    this.indicacionesespeciales,
+    this.fechaentrega,
+    this.horaentrega
     );
 
   Map<String, dynamic> toJson() =>
@@ -28,8 +28,8 @@ class PostOrderRequest {
       'direccion': direccion,
       //'direccionentregaid': direccionentregaid,
       //'aliasdireccion': aliasdireccion,
-      //'fechaentrega': fechaentrega,
-      //'horaentrega': horaentrega,
+      'fechaentrega': fechaentrega,
+      'horaentrega': horaentrega,
       'indicacionesespeciales': indicacionesespeciales,
       //'correo': correo,
       'zonaid': zonaid

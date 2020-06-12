@@ -196,6 +196,17 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  String _value = "";
+  Future _selectDate() async {
+    DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: new DateTime.now(),
+        firstDate: new DateTime(2016),
+        lastDate: new DateTime(2019)
+    );
+    if(picked != null) setState(() => _value = picked.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     final searchTextField = TextField(
@@ -364,13 +375,13 @@ class HomePageState extends State<HomePage> {
                                       addAction: _addItem,
                                       removeAction: _removeItem,
                                     ),
-                                    onTap: (){
-                                      setState(() {
-                                        this.productoToShow = !isFilterEmpty()
-                                              ? this.filterProducts[index]
-                                              : this.products[index];  
-                                      });
-                                    },
+                                    //onTap: () {
+                                    //  setState(() {
+                                    //    this.productoToShow = !isFilterEmpty()
+                                    //          ? this.filterProducts[index]
+                                    //          : this.products[index];  
+                                    //  });
+                                    //},
                                 ),
                               _divider()
                             ],

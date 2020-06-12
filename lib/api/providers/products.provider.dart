@@ -59,8 +59,8 @@ class ProductProvider {
         request.fields['direccion'] = postOrderRequest.direccion;
         request.fields['direccionentregaid'] = '0';
         request.fields['aliasdireccion'] = '';
-        request.fields['fechaentrega'] = '';
-        request.fields['horaentrega'] = '';
+        request.fields['fechaentrega'] = postOrderRequest.fechaentrega;
+        request.fields['horaentrega'] = postOrderRequest.horaentrega + ":00";
         request.fields['indicacionesespeciales'] = postOrderRequest.indicacionesespeciales;
         request.fields['correo'] = '';
         request.fields['zonaid'] = postOrderRequest.zonaid.toString();
@@ -68,7 +68,7 @@ class ProductProvider {
 
         final response = await request.send();
 
-        print('*-*-*-*-*-*-*-*-*-*-*-*-*');
+        print('*-*-*-*-*-*-*-*-*-*-*-*-*' + postOrderRequest.fechaentrega + '----' + postOrderRequest.horaentrega);
         
         response.stream.transform(utf8.decoder).listen((event) {
           print(event.toString());

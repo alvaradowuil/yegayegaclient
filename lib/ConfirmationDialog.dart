@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yegayega/api/models/PostOrderRequest.dart';
 import 'package:yegayega/api/models/Product.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 import 'api/providers/products.provider.dart';
 
@@ -26,6 +27,8 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
   TextEditingController phoneController = new TextEditingController();
   TextEditingController addressController = new TextEditingController();
   TextEditingController indicationsController = new TextEditingController();
+  DateTime dateTime = new DateTime.now();
+  String dateToShow = "Ahora";
 
   Future<void> _getDataSaved() async {
     final prefs = await SharedPreferences.getInstance();
@@ -68,7 +71,9 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
       nameController.text,
       addressController.text,
       selectedItem.id,
-      indicationsController.text);
+      indicationsController.text,
+      DateFormat('yyyy-MM-dd').format(this.dateTime).toString(),
+      DateFormat('kk:mm').format(this.dateTime).toString());
 
     ProductProvider().postOrder(postOrderRequest, widget.cartProducts, (
         [bool response, bool responseData]) async {
@@ -153,6 +158,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
               labelText: 'Indicaciones especiales',
             ),
           ),
+          
           DropdownButton<Item>(
             hint:  Text("Lugar - Costo de envío"),
             value: this.selectedItem,
@@ -180,6 +186,63 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
               );
             }).toList(),
           ),
+          Text("Fecha de entrega", textAlign: TextAlign.left, style:  TextStyle(height: 2, fontSize: 16)),
+          RaisedButton(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0)),
+                elevation: 2.0,
+                onPressed: () async {
+                  final dTime = await showDatePicker(
+                    context: context, 
+                    initialDate: new DateTime.now(), 
+                    firstDate: new DateTime.now(), 
+                    lastDate: new DateTime(2025),
+                    locale: const Locale('es','ES')
+                  );
+                  if (dTime != null){
+                    final TimeOfDay tOfDay = await showTimePicker(
+                    context: context,
+                    initialTime: new TimeOfDay.now());
+                  setState(() {
+                    this.dateTime = new DateTime(dTime.year, dTime.month, dTime.day, tOfDay.hour, tOfDay.minute);
+                    dateToShow = DateFormat('yyyy-MM-dd kk:mm').format(dateTime);
+                  });
+                  }
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  height: 50.0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Container(
+                            child: Row(
+                              children: <Widget>[
+                                Text(
+                                  dateToShow,
+                                  style: TextStyle(
+                                      fontSize: 14.0),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                      Text(
+                        "  Cambiar",
+                        style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0),
+                      ),
+                    ],
+                  ),
+                ),
+                color: Colors.white,
+              ),
+
           Text("Detalle", textAlign: TextAlign.right, style:  TextStyle(height: 2, fontSize: 22)),
           for (var item in widget.cartProducts) 
             Row(
