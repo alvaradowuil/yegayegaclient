@@ -170,7 +170,8 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
             items: users.map((Item user) {
               return  DropdownMenuItem<Item>(
                 value: user,
-                child: Row(
+                child: Expanded(child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       user.name + "  -  ",
@@ -182,7 +183,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
                     ),
                     
                   ],
-                ),
+                )),
               );
             }).toList(),
           ),
@@ -294,7 +295,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
       )),
       actions: <Widget>[
         FlatButton(
-          onPressed: (){
+          onPressed: this.submitting ? null : () {
             Navigator.of(context).pop();
           },
           child: Text(
@@ -303,7 +304,8 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
           ),
         ),
         FlatButton(
-          onPressed: () async {
+          
+          onPressed: this.submitting ? null : () async {
             if (this.nameController.text == '' || this.phoneController.text == '' || this.addressController.text == ''){
               showDialogEmptyFields();
             } else {
@@ -350,4 +352,5 @@ List<Item> users = <Item>[
     const Item(8, 'Media Legua',10, 'Q10.00'),
     const Item(9, 'Cerro Chato',11, 'Q11.00'),
     const Item(10, 'San Antonio',12, 'Q12.00'),
+    const Item(11, 'Caserío Los Dávila',12, 'Q12.00'),
   ];

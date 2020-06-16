@@ -1,4 +1,4 @@
-package com.example.yegayega
+package com.yegayega
 
 import io.flutter.embedding.android.FlutterActivity
 
