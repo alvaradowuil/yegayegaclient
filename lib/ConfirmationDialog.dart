@@ -158,11 +158,9 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
               labelText: 'Indicaciones especiales',
             ),
           ),
-          
           DropdownButton<Item>(
-            hint:  Text("Lugar - Costo de envío"),
             value: this.selectedItem,
-            onChanged: (Item Value) {
+            onChanged: (Item Value) async {
               setState(() {
                 this.selectedItem = Value;
               });
@@ -170,20 +168,10 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
             items: users.map((Item user) {
               return  DropdownMenuItem<Item>(
                 value: user,
-                child: Expanded(child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      user.name + "  -  ",
-                      style:  TextStyle(color: Colors.black),
-                    ),
-                    Text(
-                      user.showPrice,
-                      style:  TextStyle(color: Colors.black),
-                    ),
-                    
-                  ],
-                )),
+                child: Text(
+                        user.name + "  -  " + user.showPrice,
+                        style:  TextStyle(color: Colors.black),
+                      ),
               );
             }).toList(),
           ),
