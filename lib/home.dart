@@ -5,6 +5,7 @@ import 'package:yegayega/api/providers/products.provider.dart';
 import 'package:yegayega/api/models/GetProductsResponse.dart';
 
 import 'ConfirmationDialog.dart';
+import 'ProductDetail.dart';
 import 'api/ApiMethods.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,8 +33,6 @@ class HomePageState extends State<HomePage> {
   int _itemCount = 0;
   double _totalCart = 0;
   bool isShowCart = false;
-
-  Product productoToShow;
 
   @override
   void initState() {
@@ -372,11 +371,21 @@ class HomePageState extends State<HomePage> {
                                       removeAction: _removeItem,
                                     ),
                                     onTap: () {
-                                      setState(() {
-                                        this.productoToShow = !isFilterEmpty()
-                                              ? this.filterProducts[index]
-                                              : this.products[index];  
-                                      });
+                                      Product showProduct;
+                                      if (!isFilterEmpty()) {
+                                        showProduct = this.filterProducts[index];
+                                      } else {
+                                        showProduct = this.products[index];
+                                      }
+                                      Navigator.push(
+                                          context,
+                                          new MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                              new ProductDetail(
+                                                product: showProduct,
+                                                totalCart: _totalCart,)
+                                          )
+                                        );
                                     },
                                 ),
                               _divider()
@@ -386,49 +395,6 @@ class HomePageState extends State<HomePage> {
                       ))
                     ],
                   ),
-                  if (this.productoToShow != null) 
-                    Container(
-                            color: Colors.white,
-                            child: ListView(
-                            children: <Widget>[
-                              new Image.network(ApiMethods().getBaseImage() + this.productoToShow.image),
-                              Text(this.productoToShow.name,
-                                style: TextStyle(height: 2, fontSize: 20,), textAlign: TextAlign.center),
-                              Text('Q ' + this.productoToShow.price.toString(),
-                                style: TextStyle(height: 2, fontSize: 20), textAlign: TextAlign.center),
-                              Text(this.productoToShow.name,
-                                style: TextStyle(height: 2, fontSize: 15), textAlign: TextAlign.center),
-                              Center(
-                                child: Wrap(
-                                spacing: 8,
-                                children: <Widget>[
-                                  new FlatButton(
-                                      color: Colors.blue,
-                                      textColor: Colors.white,
-                                      disabledColor: Colors.grey,
-                                      disabledTextColor: Colors.black,
-                                      padding: EdgeInsets.fromLTRB(30, 8, 30, 8),
-                                      splashColor: Colors.blueAccent,
-                                      onPressed: () {
-                                        setState(() {
-                                          this.productoToShow = null;  
-                                        });
-                                      },
-                                      child: new Text("Regresar"))
-                                  ,
-                                  ActionsItem(
-                                          product: this.productoToShow,
-                                          addAction: _addItem,
-                                          removeAction: _removeItem,
-                                        )
-                                  
-                                ]
-                              ),
-                              )
-                            ],
-                          )
-                        
-                  )
                 ],
               )
                 
