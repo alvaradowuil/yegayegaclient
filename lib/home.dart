@@ -47,15 +47,11 @@ class HomePageState extends State<HomePage> {
         filter = this.searchController.text;
         this.filterProducts = this
             .products
-            .where((i) => i.name.toLowerCase().contains(filter.toLowerCase()))
+            .where((i){
+              return i.name.toLowerCase().contains(filter.toLowerCase()) || i.classification.toLowerCase().contains(filter.toLowerCase());
+              
+            })
             .toList();
-
-        this.filterProducts.addAll(
-          this.products
-            .where((i) => i.classification.toLowerCase().contains(filter.toLowerCase()))
-            .toList()
-        );
-
         if (filter != '' && this.filterProducts.length == 0){
           productNotFount = 'Lo que buscas no existe en nuestro catálogo';
         } else {
@@ -375,13 +371,13 @@ class HomePageState extends State<HomePage> {
                                       addAction: _addItem,
                                       removeAction: _removeItem,
                                     ),
-                                    //onTap: () {
-                                    //  setState(() {
-                                    //    this.productoToShow = !isFilterEmpty()
-                                    //          ? this.filterProducts[index]
-                                    //          : this.products[index];  
-                                    //  });
-                                    //},
+                                    onTap: () {
+                                      setState(() {
+                                        this.productoToShow = !isFilterEmpty()
+                                              ? this.filterProducts[index]
+                                              : this.products[index];  
+                                      });
+                                    },
                                 ),
                               _divider()
                             ],

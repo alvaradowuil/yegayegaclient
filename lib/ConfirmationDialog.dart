@@ -76,30 +76,32 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
       DateFormat('kk:mm').format(this.dateTime).toString());
 
     ProductProvider().postOrder(postOrderRequest, widget.cartProducts, (
-        [bool response, bool responseData]) async {
-          print('response -- ' + response.toString());
-          widget.onSendOrderListener(response);
+        [bool responseStatus, String message, bool responseData]) async {
+          print('response -- ' + responseStatus.toString());
+          widget.onSendOrderListener(responseStatus);
           setState(() {
             this.submitting = false;      
           });
-      showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: new Text("YegaYega"),
-          content: new Text(
-              "Su pedido fue creado exitosamente. No salgas de casa, nosotros te lo llevamos"),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text("Aceptar"),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+          showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: new Text("YegaYega"),
+              content: new Text(
+                  message),
+              actions: <Widget>[
+                new FlatButton(
+                  child: new Text("Aceptar"),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    if (responseStatus){
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            );
+          },
     );
 
       },
@@ -341,4 +343,5 @@ List<Item> users = <Item>[
     const Item(9, 'Cerro Chato',11, 'Q11.00'),
     const Item(10, 'San Antonio',12, 'Q12.00'),
     const Item(11, 'Caserío Los Dávila',12, 'Q12.00'),
+    const Item(12, 'Laguneta',12, 'Q12.00'),
   ];

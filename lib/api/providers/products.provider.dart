@@ -33,7 +33,7 @@ class ProductProvider {
   }
 
   Future<bool> postOrder(PostOrderRequest postOrderRequest, List<Product> products,
-    callback(bool response)) async {
+    callback(bool response, String message)) async {
 
     List<Map> listProduct = new List();
 
@@ -71,18 +71,23 @@ class ProductProvider {
         print('*-*-*-*-*-*-*-*-*-*-*-*-*' + postOrderRequest.fechaentrega + '----' + postOrderRequest.horaentrega);
         
         response.stream.transform(utf8.decoder).listen((event) {
-          print(event.toString());
+          print('aaaa ' + event.toString());
+
+          Map postResponse = json.decode(event);
+          bool error = postResponse["error"] as bool;
+          String message = postResponse['mensaje'];
+          if (!error) {
+            callback(true, message);
+          } else {
+            callback(false, message);
+          }
         });
 
-        if (response.statusCode == 200) {
-          callback(true);
-        } else {
-          callback(false);
-        }
+        
         
       }
     } on SocketException catch (_) {
-      callback(false);
+      callback(false, 'Lo sentimos, hubo un error en el sistema, por favor intenta nuevamente');
     }
   }
 }
