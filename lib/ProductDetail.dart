@@ -63,29 +63,12 @@ class ProductDetailState extends State<ProductDetail>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                  Image.asset(
-                 'assets/ic_launcher.png',
-                  fit: BoxFit.contain,
-                  height: 52,
-              ),
-              Container(
-                  padding: const EdgeInsets.all(8.0), child: Text(widget.product.name,style: titleApp,))
-            ],
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          iconTheme: new IconThemeData(color: Color.fromRGBO(0, 145, 86, 1)),
-      ),
       backgroundColor: Colors.white,
       body: Container(
           color: Colors.white,
           child: ListView(
           children: <Widget>[
-            new Image.network(ApiMethods().getBaseImage() + widget.product.image),
+            Hero(tag:widget.product.id.toString(), child: new Image.network(ApiMethods().getBaseImage() + widget.product.image)),
             Text(widget.product.name,
               style: TextStyle(height: 2, fontSize: 20,), textAlign: TextAlign.center),
             Text('Q ' + widget.product.price.toString(),

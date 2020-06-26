@@ -136,6 +136,16 @@ class HomePageState extends State<HomePage> {
     });
   }
 
+  _showDetailProduct(BuildContext context, Product itemProduct) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ProductDetail(
+        product: itemProduct,
+        totalCart: _totalCart
+      )),
+    );
+  }
+
   bool isFilterEmpty(){
     return this.filterProducts.length == 0 && filter == '';
   }
@@ -350,42 +360,23 @@ class HomePageState extends State<HomePage> {
                             ? this.filterProducts.length
                             : this.products.length,
                         itemBuilder: (BuildContext ctxt, int index) {
+                          Product itemProduct = !isFilterEmpty()
+                                              ? this.filterProducts[index]
+                                              : this.products[index];
                           return new Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               ListTile(
-                                    title: new Text(!isFilterEmpty()
-                                              ? this.filterProducts[index].name
-                                              : this.products[index].name),
-                                    subtitle: new Text(!isFilterEmpty()
-                                            ? 'Q. ' + this.filterProducts[index].price.toString()
-                                            : 'Q. ' + this.products[index].price.toString()),
-                                    leading: !isFilterEmpty()
-                                            ? new Image.network(ApiMethods().getBaseImage() + this.filterProducts[index].image)
-                                            : new Image.network(ApiMethods().getBaseImage() + this.products[index].image),
+                                    title: new Text(itemProduct.name),
+                                    subtitle: new Text('Q. ' + itemProduct.price.toString()),
+                                    leading: Hero(tag: itemProduct.id.toString(), child: new Image.network(ApiMethods().getBaseImage() + itemProduct.image)),
                                     trailing: ActionsItem(
-                                      product: !isFilterEmpty()
-                                              ? this.filterProducts[index]
-                                              : this.products[index],
+                                      product: itemProduct,
                                       addAction: _addItem,
                                       removeAction: _removeItem,
                                     ),
                                     onTap: () {
-                                      Product showProduct;
-                                      if (!isFilterEmpty()) {
-                                        showProduct = this.filterProducts[index];
-                                      } else {
-                                        showProduct = this.products[index];
-                                      }
-                                      Navigator.push(
-                                          context,
-                                          new MaterialPageRoute(
-                                              builder: (BuildContext context) =>
-                                              new ProductDetail(
-                                                product: showProduct,
-                                                totalCart: _totalCart,)
-                                          )
-                                        );
+                                      _showDetailProduct(context, itemProduct);
                                     },
                                 ),
                               _divider()
