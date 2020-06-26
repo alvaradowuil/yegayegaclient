@@ -4,14 +4,16 @@ import 'package:yegayega/api/models/Product.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'api/models/Area.dart';
 import 'api/providers/products.provider.dart';
 
 class ConfirmationDialog extends StatefulWidget{
   final List<Product> cartProducts; 
   final double totalCart;
+  final List<Area> areas;
   final ValueChanged<bool> onSendOrderListener;
 
-  const ConfirmationDialog({Key key, this.cartProducts, this.totalCart, this.onSendOrderListener}) : super(key: key);
+  const ConfirmationDialog({Key key, this.cartProducts, this.totalCart, this.areas, this.onSendOrderListener}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -22,7 +24,7 @@ class ConfirmationDialog extends StatefulWidget{
     
 class ConfirmationDialogState extends State<ConfirmationDialog>{
   bool submitting = false;
-  Item selectedItem = users[0];
+  Area selectedArea;
   TextEditingController nameController = new TextEditingController();
   TextEditingController phoneController = new TextEditingController();
   TextEditingController addressController = new TextEditingController();
@@ -40,7 +42,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
 
     int zone = prefs.getInt("zone") ?? 1;
     setState(() {
-      this.selectedItem = users.where((element) => element.id == zone).toList()[0];
+      this.selectedArea = widget.areas.where((element) => element.id == zone).toList()[0];
     });
   }
 
@@ -70,7 +72,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
       phoneController.text,
       nameController.text,
       addressController.text,
-      selectedItem.id,
+      selectedArea.id,
       indicationsController.text,
       DateFormat('yyyy-MM-dd').format(this.dateTime).toString(),
       DateFormat('kk:mm').format(this.dateTime).toString());
@@ -117,6 +119,8 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
     this.addressController.text = "";
     this.indicationsController.text = "";
 
+    selectedArea = widget.areas[0];
+
     _getDataSaved();
   }
 
@@ -160,18 +164,18 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
               labelText: 'Indicaciones especiales',
             ),
           ),
-          DropdownButton<Item>(
-            value: this.selectedItem,
-            onChanged: (Item Value) async {
+          DropdownButton<Area>(
+            value: this.selectedArea,
+            onChanged: (Area area) async {
               setState(() {
-                this.selectedItem = Value;
+                this.selectedArea = area;
               });
             },
-            items: users.map((Item user) {
-              return  DropdownMenuItem<Item>(
-                value: user,
+            items: widget.areas.map((Area area) {
+              return  DropdownMenuItem<Area>(
+                value: area,
                 child: Text(
-                        user.name + "  -  " + user.showPrice,
+                        area.name + "  -  Q" + area.price.toString(),
                         style:  TextStyle(color: Colors.black),
                       ),
               );
@@ -263,7 +267,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
                       text: "Costo de envío",)
                 ),
               ),
-                Text("Q. " + (selectedItem.price).toString(), textAlign: TextAlign.right, style:  TextStyle(fontSize: 15))
+                Text("Q. " + (selectedArea.price).toString(), textAlign: TextAlign.right, style:  TextStyle(fontSize: 15))
               ]
             ),
             Row(
@@ -278,7 +282,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
                       text: "Total a pagar",)
                 ),
               ),
-                Text("Q. " + ((widget.totalCart + selectedItem.price)).toString(), textAlign: TextAlign.right, style:  TextStyle(fontSize: 22))
+                Text("Q. " + ((widget.totalCart + selectedArea.price)).toString(), textAlign: TextAlign.right, style:  TextStyle(fontSize: 22))
               ]
             ),
         ],
@@ -307,7 +311,7 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
                   prefs.setString('phone', this.phoneController.text);
                   prefs.setString('address', this.addressController.text);
                   prefs.setString('indications', indicationsController.text);
-                  prefs.setInt('zone', this.selectedItem.id);
+                  prefs.setInt('zone', this.selectedArea.id);
                   saveOrder();
             }
           },
@@ -321,27 +325,3 @@ class ConfirmationDialogState extends State<ConfirmationDialog>{
   }
 
 }
-
-class Item {
-  const Item(this.id, this.name,this.price, this.showPrice);
-  final int id;
-  final String name;
-  final double price;
-  final String showPrice;
-}
-
-
-List<Item> users = <Item>[
-    const Item(1, 'Ixhuatán',5, 'Q5.00'),
-    const Item(2, 'Estanzuelas',8, 'Q8.00'),
-    const Item(3, 'La Fila',10, 'Q10.00'),
-    const Item(4, 'Los Hatillos',8, 'Q8.00'),
-    const Item(5, 'Santa Anita',8, 'Q8.00'),
-    const Item(6, 'La Esperanza',10, 'Q10.00'),
-    const Item(7, 'Llano Grande',12, 'Q12.00'),
-    const Item(8, 'Media Legua',10, 'Q10.00'),
-    const Item(9, 'Cerro Chato',11, 'Q11.00'),
-    const Item(10, 'San Antonio',12, 'Q12.00'),
-    const Item(11, 'Caserío Los Dávila',12, 'Q12.00'),
-    const Item(12, 'Laguneta',12, 'Q12.00'),
-  ];

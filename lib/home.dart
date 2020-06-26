@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:yegayega/ActionsItem.dart';
+import 'package:yegayega/api/models/GetAreaResponse.dart';
 import 'package:yegayega/api/models/Product.dart';
 import 'package:yegayega/api/providers/products.provider.dart';
 import 'package:yegayega/api/models/GetProductsResponse.dart';
 
 import 'ConfirmationDialog.dart';
 import 'api/ApiMethods.dart';
+import 'api/models/Area.dart';
 
 class HomePage extends StatefulWidget {
   static String tag = 'home-page';
@@ -25,6 +27,7 @@ class HomePageState extends State<HomePage> {
 
   List<Product> products = new List();
   List<Product> filterProducts = new List();
+  List<Area> areas = new List();
 
   bool submitting = false;
   String filter = '';
@@ -42,6 +45,7 @@ class HomePageState extends State<HomePage> {
     this.searchController = new TextEditingController();
 
     this.getProducts();
+    this.getAreas();
     this.searchController.addListener(() {
       setState(() {
         filter = this.searchController.text;
@@ -89,6 +93,7 @@ class HomePageState extends State<HomePage> {
       return  ConfirmationDialog(
                 cartProducts: this.products.where((product) => product.count > 0).toList(),
                 totalCart: this._totalCart,
+                areas: this.areas,
                 onSendOrderListener: (result){
                   _showResult(result);
                 },
@@ -124,7 +129,7 @@ class HomePageState extends State<HomePage> {
         [bool response, GetProductsResponse responseData]) async {
       if (response) {
         if (responseData != null) {
-          this.products = responseData.data as List<Product>;
+          this.products = responseData.data;
         } else {
           this.isEmpty = true;
         }
@@ -134,6 +139,23 @@ class HomePageState extends State<HomePage> {
         }
       }
       this.toggleSubmitState();
+    });
+  }
+
+  Future<Null> getAreas() async {
+    ProductProvider().getAreas((
+        [bool response, GetAreasResponse responseData]) async {
+      if (response) {
+        if (responseData != null) {
+          this.areas = responseData.data;
+        } else {
+          //this.isEmpty = true;
+        }
+      } else {
+        if (responseData == null) {
+          this.showConnectionAlert();
+        }
+      }
     });
   }
 

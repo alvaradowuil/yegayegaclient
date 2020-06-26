@@ -1,4 +1,5 @@
 import 'package:yegayega/api/ApiMethods.dart';
+import 'package:yegayega/api/models/GetAreaResponse.dart';
 import 'package:yegayega/api/models/GetProductsResponse.dart';
 import 'package:yegayega/api/models/PostOrderRequest.dart';
 
@@ -26,6 +27,26 @@ class ProductProvider {
           callback(true, null);
         }
         
+      }
+    } on SocketException catch (_) {
+      callback(false, null);
+    }
+  }
+
+  Future<GetAreasResponse> getAreas(
+    callback(bool response, GetAreasResponse responseData)) async {
+      print('-*-*-*-*-Obteniendo zonas*-*-*-*-*-*');
+
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        final response = await http.get(
+            '${ApiMethods().getAreas()}');
+        if (response.statusCode == 200) {
+          callback(true, GetAreasResponse.fromJson(json.decode(response.body)));
+        } else {
+          callback(true, null);
+        }
       }
     } on SocketException catch (_) {
       callback(false, null);

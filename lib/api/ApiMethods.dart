@@ -18,4 +18,8 @@ class ApiMethods{
   postOrder() {
     return baseUrl + 'guardarpedido';
   }
+
+  getAreas() {
+    return baseUrl + 'zonas';
+  }
 }
